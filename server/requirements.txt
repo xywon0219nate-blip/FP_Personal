@@ -3,8 +3,8 @@ uvicorn
 sqlalchemy
 pymysql
 pydantic
-dotenv
-security
+python-dotenv
+# security
 passlib
 bcrypt == 4.0.1
 python-jose
