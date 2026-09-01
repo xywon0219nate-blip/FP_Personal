@@ -1,3 +1,5 @@
+// import "../../styles/KakaoMap.css";
+
 // TODO: 카카오맵 API 연동 필요
 // 1) front/index.html <head>에 다음 스크립트 추가
 //    <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=REST_API_KEY&autoload=false"></script>
@@ -10,8 +12,6 @@
 //    형태로 지도를 초기화하고, 아래 placeholder 마크업을 실제 지도 컨테이너로 교체합니다.
 // 3) mapApi.getDistribution() 결과(mock 좌표)를 실제 kakao.maps.Marker로 교체합니다.
 
-// 기존 코드
-// import "./KakaoMap.css";
 // function KakaoMap({ center, points = [] }) {
 //   return (
 //     <div className="kakao-map-placeholder">
@@ -30,10 +30,11 @@
 //     </div>
 //   );
 // }
-//export default KakaoMap;
+
+// export default KakaoMap;
 
 import { useEffect, useRef } from "react";
-import "./KakaoMap.css";
+import "../../styles/KakaoMap.css";
 
 function KakaoMap({ center, points = [] }) {
 	const containerRef = useRef(null);
