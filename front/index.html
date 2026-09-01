@@ -1,13 +1,18 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>front</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/png" href="/img/Logo.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=%VITE_KAKAO_MAP_KEY%&autoload=false&libraries=services"></script>
+		<!-- TODO: 카카오맵 API 연동 필요 - 아래 스크립트를 추가하고 REST_API_KEY를 .env(VITE_KAKAO_MAP_KEY)로 관리
+      <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=REST_API_KEY&autoload=false"></script>
+      ***** ㄴTODO의 해당 부분 구형했습니다. 
+      -->
+		<title>StartOn</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.jsx"></script>
+	</body>
 </html>
