@@ -1,3 +1,28 @@
+import api from "./axiosInstance";
+
+export async function login(email, password) {
+	const { data } = await api.post("/api/auth/login", { email, password });
+	localStorage.setItem("token", data.access_token);
+	return data.user;
+}
+
+export async function signupBasic(basicInfo) {
+	const { data } = await api.post("/api/auth/signup/basic", basicInfo);
+	return data;
+}
+
+export async function signupInterests(interestInfo) {
+	const { data } = await api.post("/api/auth/signup/interests", interestInfo);
+	localStorage.setItem("token", data.access_token);
+	return data.user;
+}
+
+// 새로고침 시 로그인 상태 복원용 함수
+export async function getMe() {
+	const { data } = await api.get("/api/auth/me");
+	return data;
+}
+
 // import { mockUser } from "../mocks/users";
 
 // export async function login(email, password) {
@@ -35,28 +60,3 @@
 //     setTimeout(() => resolve({ ...mockUser, interests: interestInfo }), 300)
 //   );
 // }
-
-import api from "./axiosInstance";
-
-export async function login(email, password) {
-	const { data } = await api.post("/api/auth/login", { email, password });
-	localStorage.setItem("token", data.access_token);
-	return data.user;
-}
-
-export async function signupBasic(basicInfo) {
-	const { data } = await api.post("/api/auth/signup/basic", basicInfo);
-	return data;
-}
-
-export async function signupInterests(interestInfo) {
-	const { data } = await api.post("/api/auth/signup/interests", interestInfo);
-	localStorage.setItem("token", data.access_token);
-	return data.user;
-}
-
-// 새로고침 시 로그인 상태 복원용 함수
-export async function getMe() {
-	const { data } = await api.get("/api/auth/me");
-	return data;
-}

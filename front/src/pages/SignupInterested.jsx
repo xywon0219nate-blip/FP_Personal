@@ -22,7 +22,15 @@ function SignupInterested() {
 	const [selectedCategories, setSelectedCategories] = useState([]);
 	const [selectedRegions, setSelectedRegions] = useState([]);
 	const [regionToAdd, setRegionToAdd] = useState("");
-	const [storeType, setStoreType] = useState("");
+	const [selectedStoreTypes, setSelectedStoreTypes] = useState([]);
+
+	const toggleStoreType = (code) => {
+		setSelectedStoreTypes((prev) =>
+			prev.includes(code)
+				? prev.filter((item) => item !== code)
+				: [...prev, code],
+		);
+	};
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const allCategoryOptions = mockCategoryGroups.flatMap(
@@ -62,7 +70,7 @@ function SignupInterested() {
 				...basicInfo,
 				categories: selectedCategories.map(categoryName),
 				regions: selectedRegions.map(regionName),
-				storeType: storeTypeName(storeType),
+				storeTypes: selectedStoreTypes.map(storeTypeName), // storeType → storeTypes로 변경
 			};
 			const user = await signupInterests(payload);
 			login(user);
@@ -118,14 +126,18 @@ function SignupInterested() {
 
 						<p className="signup-interest__summary-label">매장 형태</p>
 						<div className="signup-interest__tag-list">
-							{!storeType && (
+							{selectedStoreTypes.length === 0 && (
 								<span
 									style={{ fontSize: 12, color: "var(--color-text-muted-2)" }}
 								>
 									선택된 매장 형태가 없습니다.
 								</span>
 							)}
-							{storeType && <Tag>{storeTypeName(storeType)}</Tag>}
+							{selectedStoreTypes.map((code) => (
+								<Tag key={code} onRemove={() => toggleStoreType(code)}>
+									{storeTypeName(code)}
+								</Tag>
+							))}
 						</div>
 					</aside>
 
@@ -170,12 +182,11 @@ function SignupInterested() {
 
 						<section className="signup-interest__section">
 							<h4>3. 매장 형태</h4>
-							<Select
-								id="storeType"
-								placeholder="매장 형태를 선택해주세요"
+							<p className="signup-page__desc">복수 선택 가능</p>
+							<CategoryToggleGroup
 								options={mockStoreTypes}
-								value={storeType}
-								onChange={(e) => setStoreType(e.target.value)}
+								selected={selectedStoreTypes}
+								onToggle={toggleStoreType}
 							/>
 						</section>
 

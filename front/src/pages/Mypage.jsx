@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // useEffect 추가
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
 // import { mockUser } from "../mocks/users.js";
+// -> 실제 데이터가 들어가도록
 import { updateMyProfile } from "../api/userApi.js";
 import AddItemModal from "../components/mypage/AddItemModal.jsx";
 import Card from "../components/common/Card.jsx";
@@ -29,11 +30,9 @@ const LIMITS = { category: 10, region: 5, storeType: 5 };
 //   };
 // }
 function buildInitialState(baseUser) {
-	const storeTypes = Array.isArray(baseUser.store_type)
-		? baseUser.store_type
-		: baseUser.store_type
-			? [baseUser.store_type]
-			: [];
+	const storeTypes = Array.isArray(baseUser.store_types)
+		? baseUser.store_types
+		: [];
 
 	return {
 		form: {
@@ -149,7 +148,7 @@ function Mypage() {
 				password: form.password || undefined,
 				categories,
 				regions,
-				store_type: storeTypes[0] ?? null,
+				store_types: storeTypes,
 			});
 			login(updated);
 			navigate("/");

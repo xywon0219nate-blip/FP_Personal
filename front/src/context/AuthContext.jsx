@@ -1,18 +1,3 @@
-// import { useState } from "react";
-// import { AuthContext } from "./authContext.js";
-
-// export function AuthProvider({ children }) {
-//   const [user, setUser] = useState(null);
-
-//   const login = (userData) => setUser(userData);
-//   const logout = () => setUser(null);
-
-//   return (
-//     <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, logout }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// }
 import { useState, useEffect } from "react";
 import { AuthContext } from "./authContext.js";
 import { getMe } from "../api/authApi.js";
@@ -55,3 +40,19 @@ export function AuthProvider({ children }) {
 		</AuthContext.Provider>
 	);
 }
+
+// import { useState } from "react";
+// import { AuthContext } from "./authContext.js";
+
+// export function AuthProvider({ children }) {
+//   const [user, setUser] = useState(null);
+
+//   const login = (userData) => setUser(userData);
+//   const logout = () => setUser(null);
+
+//   return (
+//     <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, logout }}>
+//       {children}
+//     </AuthContext.Provider>
+//   );
+// }
