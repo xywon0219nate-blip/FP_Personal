@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react"; // useEffect 추가
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react"; // useEffect 추가
+import { useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../hooks/useAuth.js";
-// import { mockUser } from "../mocks/users.js";
-// -> 실제 데이터가 들어가도록
-import { updateMyProfile } from "../api/userApi.js";
+import { updateMyProfile, deleteMyAccount } from "../api/userApi.js";
+import { formatPhoneNumber, toPhoneDigits } from "../utils/phone.js";
 import AddItemModal from "../components/mypage/AddItemModal.jsx";
 import Card from "../components/common/Card.jsx";
 import TextField from "../components/common/TextField.jsx";
@@ -15,20 +14,6 @@ import "../styles/Mypage.css";
 
 const LIMITS = { category: 10, region: 5, storeType: 5 };
 
-// function buildInitialState(baseUser) {
-//   return {
-//     form: {
-//       name: baseUser.name ?? "",
-//       phone: baseUser.phone ?? "",
-//       email: baseUser.email ?? "",
-//       password: "",
-//       passwordConfirm: "",
-//     },
-//     categories: baseUser.interests?.categories ?? [],
-//     regions: baseUser.interests?.regions ?? [],
-//     storeTypes: baseUser.interests?.storeTypes ?? [],
-//   };
-// }
 function buildInitialState(baseUser) {
 	const storeTypes = Array.isArray(baseUser.store_types)
 		? baseUser.store_types
@@ -37,7 +22,7 @@ function buildInitialState(baseUser) {
 	return {
 		form: {
 			name: baseUser.name ?? "",
-			phone: baseUser.phone ?? "",
+			phone: formatPhoneNumber(baseUser.phone ?? ""),
 			email: baseUser.email ?? "",
 			password: "",
 			passwordConfirm: "",
@@ -83,19 +68,27 @@ function InterestSection({
 }
 
 function Mypage() {
-	const { user, login } = useAuth();
-	//   const baseUser = user ?? mockUser;
+	const { user, login, logout } = useAuth();
 	const baseUser = user ?? {};
 
 	const navigate = useNavigate();
+	const location = useLocation();
+	const phoneInputRef = useRef(null);
 	const [state, setState] = useState(() => buildInitialState(baseUser));
 	useEffect(() => {
 		if (user) {
 			setState(buildInitialState(user));
 		}
 	}, [user]);
+
+	useEffect(() => {
+		if (location.state?.promptPhone) {
+			phoneInputRef.current?.focus();
+		}
+	}, [location.state]);
 	const [activeModalTab, setActiveModalTab] = useState(null);
 	const [isSaving, setIsSaving] = useState(false);
+	const [isWithdrawing, setIsWithdrawing] = useState(false);
 	const [error, setError] = useState("");
 
 	const { form, categories, regions, storeTypes } = state;
@@ -108,7 +101,12 @@ function Mypage() {
 
 	const handleFieldChange = (event) => {
 		const { name, value } = event.target;
-		setState((prev) => ({ ...prev, form: { ...prev.form, [name]: value } }));
+		// 프론트에서는 010-1234-5678 형식으로 입력받고, 백엔드 전송 시 숫자만 남긴다.
+		const nextValue = name === "phone" ? formatPhoneNumber(value) : value;
+		setState((prev) => ({
+			...prev,
+			form: { ...prev.form, [name]: nextValue },
+		}));
 	};
 
 	const removeItem = (tab, name) => {
@@ -132,6 +130,22 @@ function Mypage() {
 		navigate("/");
 	};
 
+	const handleWithdraw = async () => {
+		const confirmed = window.confirm(
+			"정말 회원 탈퇴하시겠습니까? \n탈퇴 시 모든 정보가 삭제되며 되돌릴 수 없습니다.",
+		);
+		if (!confirmed) return;
+
+		setIsWithdrawing(true);
+		try {
+			await deleteMyAccount();
+			alert("회원탈퇴가 완료되었습니다.");
+			logout();
+		} finally {
+			setIsWithdrawing(false);
+		}
+	};
+
 	const handleSave = async () => {
 		if (form.password && form.password !== form.passwordConfirm) {
 			setError("비밀번호가 일치하지 않습니다.");
@@ -143,7 +157,7 @@ function Mypage() {
 		try {
 			const updated = await updateMyProfile({
 				name: form.name,
-				phone: form.phone,
+				phone: toPhoneDigits(form.phone),
 				email: form.email,
 				password: form.password || undefined,
 				categories,
@@ -175,10 +189,14 @@ function Mypage() {
 						onChange={handleFieldChange}
 					/>
 					<TextField
+						ref={phoneInputRef}
 						label="전화번호"
 						id="phone"
 						name="phone"
 						type="tel"
+						inputMode="numeric"
+						maxLength={13}
+						placeholder="010-1234-5678"
 						value={form.phone}
 						onChange={handleFieldChange}
 					/>
@@ -270,6 +288,16 @@ function Mypage() {
 					onClose={() => setActiveModalTab(null)}
 				/>
 			)}
+
+			<div className="mypage__withdraw">
+				<Button
+					variant="danger"
+					onClick={handleWithdraw}
+					disabled={isWithdrawing}
+				>
+					{isWithdrawing ? "처리 중..." : "회원탈퇴"}
+				</Button>
+			</div>
 		</div>
 	);
 }

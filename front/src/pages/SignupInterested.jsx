@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { signupInterests } from "../api/authApi.js";
+import { signupInterests, kakaoSignupInterests } from "../api/authApi.js";
+import {
+	getCategoryGroups,
+	getRegions,
+	getStoreTypes,
+} from "../api/recommendationApi.js";
 import { useAuth } from "../hooks/useAuth.js";
-import { mockCategoryGroups, mockStoreTypes } from "../mocks/categories.js";
-import { mockRegions } from "../mocks/regions.js";
 import { SIGNUP_STEPS } from "../constants/signup.js";
 import StepIndicator from "../components/common/StepIndicator.jsx";
 import CategoryToggleGroup from "../components/common/CategoryToggleGroup.jsx";
@@ -17,12 +20,41 @@ function SignupInterested() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { login } = useAuth();
-	const basicInfo = location.state ?? {};
+	const { kakaoProfile, isKakaoFlow, ...basicInfo } = location.state ?? {};
 
 	const [selectedCategories, setSelectedCategories] = useState([]);
 	const [selectedRegions, setSelectedRegions] = useState([]);
 	const [regionToAdd, setRegionToAdd] = useState("");
 	const [selectedStoreTypes, setSelectedStoreTypes] = useState([]);
+	const [categoryGroups, setCategoryGroups] = useState([]);
+	const [regions, setRegions] = useState([]);
+	const [storeTypes, setStoreTypes] = useState([]);
+	const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+
+	useEffect(() => {
+		let ignore = false;
+
+		Promise.all([getCategoryGroups(), getRegions(), getStoreTypes()])
+			.then(([categoriesData, regionsData, storeTypesData]) => {
+				if (ignore) return;
+				setCategoryGroups(categoriesData);
+				setRegions(regionsData);
+				setStoreTypes(storeTypesData);
+			})
+			.catch((err) => {
+				console.error(
+					"카테고리/지역/매장 형태 목록을 불러오지 못했습니다.",
+					err,
+				);
+			})
+			.finally(() => {
+				if (!ignore) setIsLoadingOptions(false);
+			});
+
+		return () => {
+			ignore = true;
+		};
+	}, []);
 
 	const toggleStoreType = (code) => {
 		setSelectedStoreTypes((prev) =>
@@ -33,9 +65,7 @@ function SignupInterested() {
 	};
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const allCategoryOptions = mockCategoryGroups.flatMap(
-		(group) => group.children,
-	);
+	const allCategoryOptions = categoryGroups.flatMap((group) => group.children);
 
 	const toggleCategory = (code) => {
 		setSelectedCategories((prev) =>
@@ -59,21 +89,37 @@ function SignupInterested() {
 	const categoryName = (code) =>
 		allCategoryOptions.find((c) => c.code === code)?.name ?? code;
 	const regionName = (code) =>
-		mockRegions.find((r) => r.code === code)?.name ?? code;
+		regions.find((r) => r.code === code)?.name ?? code;
 	const storeTypeName = (code) =>
-		mockStoreTypes.find((s) => s.code === code)?.name ?? code;
+		storeTypes.find((s) => s.code === code)?.name ?? code;
 
 	const handleSubmit = async () => {
 		setIsSubmitting(true);
 		try {
-			const payload = {
-				...basicInfo,
+			const interests = {
 				categories: selectedCategories.map(categoryName),
 				regions: selectedRegions.map(regionName),
 				storeTypes: selectedStoreTypes.map(storeTypeName), // storeType → storeTypes로 변경
 			};
-			const user = await signupInterests(payload);
+
+			if (isKakaoFlow) {
+				const user = await kakaoSignupInterests({
+					kakao_id: kakaoProfile?.kakao_id,
+					email: kakaoProfile?.email,
+					name: kakaoProfile?.name,
+					...interests,
+				});
+				login(user);
+				alert(
+					"회원가입이 완료되었습니다. \n마이페이지에서 전화번호를 추가로 입력해주세요.",
+				);
+				navigate("/mypage", { state: { promptPhone: true } });
+				return;
+			}
+
+			const user = await signupInterests({ ...basicInfo, ...interests });
 			login(user);
+			alert("회원가입이 완료 되었습니다.");
 			navigate("/");
 		} finally {
 			setIsSubmitting(false);
@@ -88,10 +134,6 @@ function SignupInterested() {
 			<Card className="signup-page__panel">
 				<div className="signup-interest__grid">
 					<aside className="signup-interest__summary">
-						<h3>
-							{basicInfo.name ? `${basicInfo.name}님의 정보` : "나의 정보"}
-						</h3>
-
 						<p className="signup-interest__summary-label">관심 업종</p>
 						<div className="signup-interest__tag-list">
 							{selectedCategories.length === 0 && (
@@ -151,8 +193,10 @@ function SignupInterested() {
 						<section className="signup-interest__section">
 							<h4>1. 관심 업종 선택</h4>
 							<p className="signup-page__desc">복수 선택 가능</p>
-
-							{mockCategoryGroups.map((group) => (
+							{isLoadingOptions && (
+								<p className="signup-page__desc">업종 목록을 불러오는 중...</p>
+							)}
+							{categoryGroups.map((group) => (
 								<div className="signup-interest__group" key={group.code}>
 									<p className="signup-interest__group-title">{group.name}</p>
 									<CategoryToggleGroup
@@ -170,7 +214,7 @@ function SignupInterested() {
 								<Select
 									id="regionToAdd"
 									placeholder="지역을 선택해주세요"
-									options={mockRegions}
+									options={regions}
 									value={regionToAdd}
 									onChange={(e) => setRegionToAdd(e.target.value)}
 								/>
@@ -183,8 +227,13 @@ function SignupInterested() {
 						<section className="signup-interest__section">
 							<h4>3. 매장 형태</h4>
 							<p className="signup-page__desc">복수 선택 가능</p>
+							{isLoadingOptions && (
+								<p className="signup-page__desc">
+									매장 형태 목록을 불러오는 중...
+								</p>
+							)}
 							<CategoryToggleGroup
-								options={mockStoreTypes}
+								options={storeTypes}
 								selected={selectedStoreTypes}
 								onToggle={toggleStoreType}
 							/>

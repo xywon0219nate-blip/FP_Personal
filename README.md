@@ -1,2 +1,2 @@
-# FP_-Personal
-M - final project의 개인 백업 레파지토리
+# final-project
+메가스터디 최종프로젝트

@@ -1,13 +1,31 @@
-import { mockBotReply } from "../mocks/chatMessages";
+import api from "./axiosInstance";
 
-export async function sendMessage(message) {
-  // TODO: FastAPI/LLM 연동 - axiosInstance의 api를 import해서 실제 엔드포인트로 교체
-  // import api from "./axiosInstance";
-  // const { data } = await api.post("/api/chat", { message });
-  // return data;
-  console.debug("[mock] sendMessage message:", message);
-
-  return new Promise((resolve) =>
-    setTimeout(() => resolve({ ...mockBotReply, id: Date.now() }), 500)
+/**
+ * @param {string} message
+ * @param {number|null} sessionId
+ * @returns {Promise<{session_id: number, reply: string}>}
+ */
+export async function sendMessage(message, sessionId = null) {
+  const { data } = await api.post(
+    "/api/chat",
+    { message, session_id: sessionId },
+    { timeout: 45000 }
   );
+  return data; // { session_id, reply }
+}
+
+// --- 채팅 내역(사이드바) ---
+
+export async function fetchChatHistory() {
+  const { data } = await api.get("/api/chat/sessions");
+  return data; // [{ id, title, created_at }, ...]
+}
+
+export async function fetchSessionMessages(sessionId) {
+  const { data } = await api.get(`/api/chat/${sessionId}/history`);
+  return data; // { session_id, messages: [{ role, content, created_at }, ...] }
+}
+
+export async function deleteChatHistoryEntry(sessionId) {
+  await api.delete(`/api/chat/sessions/${sessionId}`);
 }

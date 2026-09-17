@@ -36,14 +36,21 @@
   gap: 32px;
 }
 
+.signup-interest__summary {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+
 .signup-interest__summary h3 {
   font-size: 15px;
   margin: 0 0 16px;
 }
 
 .signup-interest__summary-label {
-  font-size: 12px;
-  color: var(--color-text-muted-2);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
   margin: 16px 0 8px;
 }
 
@@ -67,7 +74,7 @@
 }
 
 .signup-interest__group-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-primary);
   margin: 0 0 10px;
@@ -85,4 +92,9 @@
 
 .signup-interest__actions {
   margin-top: 32px;
+}
+
+.signup-page__submit-row {
+  display: flex;
+  justify-content: flex-end;
 }
